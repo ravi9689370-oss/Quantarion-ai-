@@ -5,176 +5,154 @@
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <meta name="description" content="Quantarion AI - Hybrid Quantum Machine Learning Platform">
     <meta name="theme-color" content="#6366f1">
-    <title>Quantarion AI | Quantum Machine Learning</title>
-    <link rel="manifest" href="{{ url_for('static', filename='manifest.json') }}">
-    <link rel="icon" href="data:image/svg+xml,<svg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 100 100'><text y='75' font-size='75' fill='%236366f1'>⚛</text></svg>">
-    <link rel="stylesheet" href="{{ url_for('static', filename='style.css') }}">
+    <link rel="manifest" href="/static/manifest.json">
+    <title>Quantarion AI</title>
+    <link rel="stylesheet" href="/static/style.css">
 </head>
 <body>
-    <!-- Particle Background -->
-    <div class="particles">
-        <div class="particle"></div>
-        <div class="particle"></div>
-        <div class="particle"></div>
-        <div class="particle"></div>
-        <div class="particle"></div>
-    </div>
-
-    <!-- Main Container -->
+    <!-- Animated particle background -->
+    <div class="particles" id="particles"></div>
+    
+    <!-- Main container -->
     <div class="container">
-        <!-- Header -->
+        <!-- Header with logo -->
         <header class="header">
-            <div class="logo-section">
-                <div class="logo-atom">
+            <div class="logo-container">
+                <div class="atom-logo">
                     <div class="nucleus"></div>
-                    <div class="orbit orbit-1">
-                        <div class="electron"></div>
-                    </div>
-                    <div class="orbit orbit-2">
-                        <div class="electron"></div>
-                    </div>
-                    <div class="orbit orbit-3">
-                        <div class="electron"></div>
-                    </div>
+                    <div class="electron electron-1"></div>
+                    <div class="electron electron-2"></div>
+                    <div class="electron electron-3"></div>
                 </div>
-                <h1>Quantarion AI</h1>
-                <p class="tagline">Quantum Machine Learning Platform</p>
+                <div class="header-text">
+                    <h1>Quantarion AI</h1>
+                    <p>Hybrid Quantum Machine Learning</p>
+                </div>
             </div>
             
-            <button class="lang-toggle" id="langToggle" aria-label="Toggle language">
-                <span class="lang-en">EN</span>
-                <span class="lang-divider">|</span>
-                <span class="lang-hi">हिं</span>
-            </button>
+            <!-- Language toggle -->
+            <div class="language-toggle">
+                <button class="lang-btn active" data-lang="en">English</button>
+                <button class="lang-btn" data-lang="hi">हिंदी</button>
+            </div>
         </header>
 
-        <!-- Main Content -->
+        <!-- Main content -->
         <main class="main-content">
-            <!-- Input Section -->
+            <!-- Input section -->
             <section class="input-section">
-                <div class="input-card">
-                    <label for="question" class="input-label">{{ 'Ask a question' | gettext }}</label>
+                <div class="input-container">
                     <textarea 
-                        id="question" 
-                        class="input-textarea" 
-                        placeholder="Enter your question in English or Hindi..."
-                        rows="4"
+                        id="questionInput" 
+                        class="question-input" 
+                        placeholder="Ask anything..." 
+                        rows="3"
                     ></textarea>
-                    <button id="solveBtn" class="solve-button">
-                        <span class="button-text">Process Query</span>
-                        <span class="button-icon">⚛</span>
+                    <button class="solve-btn" id="solveBtn">
+                        <span>Solve with Quantum</span>
+                        <span class="pulse-ring"></span>
                     </button>
                 </div>
+            </section>
 
-                <!-- Example Questions -->
-                <div class="examples-section">
-                    <h3 class="examples-title">Quick Examples:</h3>
-                    <div class="examples-grid">
-                        <button class="example-btn" data-question="Optimize the values 2, 5, 8 for maximum efficiency" data-type="optimization">
-                            <span class="example-icon">📈</span>
-                            <span class="example-text">Optimization</span>
-                        </button>
-                        <button class="example-btn" data-question="Calculate quantum probability for numbers 1, 4, 9" data-type="calculation">
-                            <span class="example-icon">🧮</span>
-                            <span class="example-text">Calculation</span>
-                        </button>
-                        <button class="example-btn" data-question="Find pattern in sequence 2, 4, 6, 8, 10" data-type="pattern">
-                            <span class="example-icon">🔍</span>
-                            <span class="example-text">Pattern</span>
-                        </button>
-                        <button class="example-btn" data-question="Should I choose option A (70% success) or B (85% success)?" data-type="decision">
-                            <span class="example-icon">⚖️</span>
-                            <span class="example-text">Decision</span>
-                        </button>
-                    </div>
+            <!-- Example questions -->
+            <section class="examples-section">
+                <h3 class="examples-title" id="examplesTitle">Example Questions</h3>
+                <div class="examples-grid">
+                    <button class="example-btn" data-type="optimization" id="ex1">
+                        <span class="example-icon">⚡</span>
+                        <span class="example-text" id="exOptimization">Optimization Problem</span>
+                    </button>
+                    <button class="example-btn" data-type="calculation" id="ex2">
+                        <span class="example-icon">🧮</span>
+                        <span class="example-text" id="exCalculation">Quantum Calculation</span>
+                    </button>
+                    <button class="example-btn" data-type="pattern" id="ex3">
+                        <span class="example-icon">🎯</span>
+                        <span class="example-text" id="exPattern">Pattern Recognition</span>
+                    </button>
+                    <button class="example-btn" data-type="decision" id="ex4">
+                        <span class="example-icon">🔮</span>
+                        <span class="example-text" id="exDecision">Decision Making</span>
+                    </button>
                 </div>
             </section>
 
-            <!-- Results Section -->
-            <section class="results-section" id="resultsSection">
-                <div class="results-card" id="resultsCard">
-                    <!-- Loading State -->
-                    <div class="loading-container" id="loadingContainer">
-                        <div class="quantum-loader">
-                            <div class="nucleus-loader"></div>
-                            <div class="electron-orbit">
-                                <div class="electron-loader"></div>
-                            </div>
-                        </div>
-                        <p class="loading-text">Processing quantum computation...</p>
+            <!-- Loading animation -->
+            <div class="loading-container hidden" id="loadingContainer">
+                <div class="quantum-loader">
+                    <div class="electron-orbit"></div>
+                    <div class="electron-particle"></div>
+                    <span class="loader-text" id="loaderText">Processing...</span>
+                </div>
+            </div>
+
+            <!-- Results section -->
+            <section class="results-section hidden" id="resultsSection">
+                <div class="results-container">
+                    <div class="result-header">
+                        <h2 id="resultTitle">Result</h2>
+                        <button class="close-btn" id="closeResultsBtn">×</button>
                     </div>
 
-                    <!-- Results Display -->
-                    <div class="results-content" id="resultsContent" style="display: none;">
-                        <div class="result-header">
-                            <h2>Quantum Results</h2>
-                            <button class="copy-btn" id="copyBtn" title="Copy results">
-                                <span class="copy-icon">📋</span>
-                            </button>
+                    <!-- Answer -->
+                    <div class="answer-box">
+                        <p id="answerText"></p>
+                    </div>
+
+                    <!-- Quantum stats -->
+                    <div class="quantum-stats">
+                        <div class="stat-card">
+                            <span class="stat-label" id="statQuantumLabel">Quantum State</span>
+                            <span class="stat-value" id="statQuantum">|00000⟩</span>
                         </div>
-
-                        <div class="result-stats">
-                            <div class="stat-card">
-                                <span class="stat-label">Quantum State</span>
-                                <span class="stat-value" id="quantumState">|0000⟩</span>
-                                <span class="stat-description">Binary notation</span>
-                            </div>
-
-                            <div class="stat-card">
-                                <span class="stat-label">Success Probability</span>
-                                <span class="stat-value" id="probability">75.5%</span>
-                                <span class="stat-description">Measurement likelihood</span>
-                            </div>
-
-                            <div class="stat-card">
-                                <span class="stat-label">Accuracy</span>
-                                <span class="stat-value" id="accuracy">95%</span>
-                                <span class="stat-description">Error mitigation applied</span>
-                            </div>
+                        <div class="stat-card">
+                            <span class="stat-label" id="statProbLabel">Probability</span>
+                            <span class="stat-value" id="statProb">0%</span>
                         </div>
-
-                        <div class="result-data">
-                            <div class="data-item">
-                                <label>Numbers Processed:</label>
-                                <span id="numbersUsed">1, 2, 3</span>
-                            </div>
-                            <div class="data-item">
-                                <label>Timestamp:</label>
-                                <span id="timestamp">-</span>
-                            </div>
+                        <div class="stat-card">
+                            <span class="stat-label" id="statAccuracyLabel">Accuracy</span>
+                            <span class="stat-value" id="statAccuracy">0%</span>
                         </div>
-
-                        <div class="explanation-box">
-                            <h3>Explanation</h3>
-                            <p id="explanation">The quantum computation has been completed.</p>
-                        </div>
-
-                        <div class="result-actions">
-                            <button class="action-btn" id="shareBtn">
-                                <span class="action-icon">🔗</span>
-                                Share Results
-                            </button>
-                            <button class="action-btn secondary" id="newQueryBtn">
-                                <span class="action-icon">➕</span>
-                                New Query
-                            </button>
+                        <div class="stat-card">
+                            <span class="stat-label" id="statMitigationLabel">Error Mitigation</span>
+                            <span class="stat-value" id="statMitigation">ZNE</span>
                         </div>
                     </div>
+
+                    <!-- Numbers used -->
+                    <div class="numbers-section">
+                        <h4 id="numbersUsedLabel">Numbers Used</h4>
+                        <div class="numbers-display" id="numbersDisplay"></div>
+                    </div>
+
+                    <!-- Copy button -->
+                    <button class="copy-btn" id="copyBtn">
+                        <span id="copyBtnText">Copy Result</span>
+                    </button>
                 </div>
             </section>
+
+            <!-- Error message -->
+            <div class="error-container hidden" id="errorContainer">
+                <div class="error-box">
+                    <p id="errorText"></p>
+                    <button class="error-close-btn" id="closeErrorBtn">×</button>
+                </div>
+            </div>
         </main>
 
         <!-- Footer -->
         <footer class="footer">
-            <p>🚀 Quantarion AI v1.0 | Powered by Quantum Computing + Google Gemini AI</p>
-            <p class="footer-secondary">Educational Platform | Simulated Quantum Algorithms</p>
+            <p id="footerText">Powered by Quantum Computing & AI</p>
         </footer>
     </div>
 
-    <!-- Toast Notifications -->
-    <div class="toast-container" id="toastContainer"></div>
+    <!-- Toast notification -->
+    <div class="toast hidden" id="toast">
+        <span id="toastText"></span>
+    </div>
 
-    <!-- Scripts -->
-    <script src="{{ url_for('static', filename='script.js') }}"></script>
+    <script src="/static/script.js"></script>
 </body>
 </html>
