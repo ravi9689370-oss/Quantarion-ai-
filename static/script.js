@@ -1,123 +1,145 @@
-// Language settings
-const translations = {
+/**
+ * Quantarion AI - Frontend JavaScript
+ * Handles UI interactions, API calls, and animations
+ */
+
+// ==================== STATE MANAGEMENT ====================
+
+const state = {
+    currentLanguage: localStorage.getItem('language') || 'en',
+    isLoading: false,
+    currentQuery: null,
+    currentResult: null
+};
+
+const i18n = {
     en: {
-        inputLabel: 'Ask a Quantum Question',
-        submitBtn: 'Process',
-        examplesLabel: 'Example Questions:',
-        exOptimization: 'Optimization',
-        exCalculation: 'Calculation',
-        exPattern: 'Pattern',
-        exDecision: 'Decision',
-        resultTitle: 'Quantum Computation Result',
-        questionLabel: 'Your Question:',
-        answerLabel: 'Answer:',
-        stateLabel: 'Quantum State',
-        probabilityLabel: 'Probability',
-        numbersLabel: 'Numbers Used',
-        accuracyLabel: 'Accuracy',
-        copyText: 'Copy',
-        copiedText: 'Copied!',
-        exampleQuestions: {
-            optimization: 'Can you optimize the portfolio with values 10, 20, 30?',
-            calculation: 'What is the sum of 15 and 25 using quantum computing?',
-            pattern: 'Find the pattern in the sequence 2, 4, 8, 16',
-            decision: 'Which option is best between choices 5, 7, 9?'
-        },
-        error: 'An error occurred. Please try again.',
-        loading: 'Processing...'
+        'ask-question': 'Ask a question',
+        'process-query': 'Process Query',
+        'processing': 'Processing quantum computation...',
+        'quantum-results': 'Quantum Results',
+        'quantum-state': 'Quantum State',
+        'success-probability': 'Success Probability',
+        'accuracy': 'Accuracy',
+        'numbers-processed': 'Numbers Processed',
+        'timestamp': 'Timestamp',
+        'explanation': 'Explanation',
+        'copy-results': 'Copy results',
+        'share-results': 'Share Results',
+        'new-query': 'New Query',
+        'error-occurred': 'An error occurred',
+        'copied-success': 'Results copied to clipboard!',
+        'copy-failed': 'Failed to copy results',
+        'query-required': 'Please enter a question',
+        'optimization': 'Optimization',
+        'calculation': 'Calculation',
+        'pattern': 'Pattern',
+        'decision': 'Decision',
+        'quick-examples': 'Quick Examples:',
+        'binary-notation': 'Binary notation',
+        'measurement-likelihood': 'Measurement likelihood',
+        'error-mitigation': 'Error mitigation applied',
+        'powered-by': '🚀 Quantarion AI v1.0 | Powered by Quantum Computing + Google Gemini AI'
     },
     hi: {
-        inputLabel: 'क्वांटम प्रश्न पूछें',
-        submitBtn: 'प्रोसेस करें',
-        examplesLabel: 'उदाहरण प्रश्न:',
-        exOptimization: 'अनुकूलन',
-        exCalculation: 'गणना',
-        exPattern: 'पैटर्न',
-        exDecision: 'निर्णय',
-        resultTitle: 'क्वांटम गणना परिणाम',
-        questionLabel: 'आपका प्रश्न:',
-        answerLabel: 'उत्तर:',
-        stateLabel: 'क्वांटम स्थिति',
-        probabilityLabel: 'संभावना',
-        numbersLabel: 'उपयोग किए गए नंबर',
-        accuracyLabel: 'सटीकता',
-        copyText: 'कॉपी',
-        copiedText: 'कॉपी हुआ!',
-        exampleQuestions: {
-            optimization: 'क्या आप मानों 10, 20, 30 के साथ पोर्टफोलियो को अनुकूलित कर सकते हैं?',
-            calculation: 'क्वांटम कंप्यूटिंग का उपयोग करके 15 और 25 का योग क्या है?',
-            pattern: 'अनुक्रम 2, 4, 8, 16 में पैटर्न खोजें',
-            decision: 'विकल्पों 5, 7, 9 के बीच कौन सा विकल्प सबसे अच्छा है?'
-        },
-        error: 'एक त्रुटि हुई। कृपया फिर से प्रयास करें।',
-        loading: 'प्रोसेस हो रहा है...'
+        'ask-question': 'एक प्रश्न पूछें',
+        'process-query': 'क्वेरी प्रोसेस करें',
+        'processing': 'क्वांटम गणना प्रसंस्करण...',
+        'quantum-results': 'क्वांटम परिणाम',
+        'quantum-state': 'क्वांटम स्थिति',
+        'success-probability': 'सफलता की संभावना',
+        'accuracy': 'सटीकता',
+        'numbers-processed': 'प्रसंस्कृत संख्याएं',
+        'timestamp': 'टाइमस्टैम्प',
+        'explanation': 'व्याख्या',
+        'copy-results': 'परिणाम कॉपी करें',
+        'share-results': 'परिणाम साझा करें',
+        'new-query': 'नई क्वेरी',
+        'error-occurred': 'एक त्रुटि हुई',
+        'copied-success': 'परिणाम क्लिपबोर्ड में कॉपी किया गया!',
+        'copy-failed': 'परिणाम कॉपी करने में विफल',
+        'query-required': 'कृपया एक प्रश्न दर्ज करें',
+        'optimization': 'अनुकूलन',
+        'calculation': 'गणना',
+        'pattern': 'पैटर्न',
+        'decision': 'निर्णय',
+        'quick-examples': 'त्वरित उदाहरण:',
+        'binary-notation': 'बाइनरी संकेतन',
+        'measurement-likelihood': 'माप की संभावना',
+        'error-mitigation': 'त्रुटि शमन लागू',
+        'powered-by': '🚀 क्वांटरियन एआई v1.0 | क्वांटम कंप्यूटिंग + गूगल जेमिनी एआई द्वारा संचालित'
     }
 };
 
-// Global state
-let currentLanguage = 'en';
-let isProcessing = false;
+// ==================== DOM ELEMENTS ====================
 
-// DOM Elements
-const questionInput = document.getElementById('questionInput');
-const submitBtn = document.getElementById('submitBtn');
-const languageToggle = document.getElementById('languageToggle');
-const resultsSection = document.getElementById('resultsSection');
-const resultCard = document.getElementById('resultCard');
-const copyBtn = document.getElementById('copyBtn');
-const toast = document.getElementById('toast');
-const particlesContainer = document.getElementById('particles');
+const elements = {
+    questionInput: document.getElementById('question'),
+    solveBtn: document.getElementById('solveBtn'),
+    langToggle: document.getElementById('langToggle'),
+    resultsSection: document.getElementById('resultsSection'),
+    loadingContainer: document.getElementById('loadingContainer'),
+    resultsContent: document.getElementById('resultsContent'),
+    resultsCard: document.getElementById('resultsCard'),
+    copyBtn: document.getElementById('copyBtn'),
+    shareBtn: document.getElementById('shareBtn'),
+    newQueryBtn: document.getElementById('newQueryBtn'),
+    toastContainer: document.getElementById('toastContainer'),
+    exampleBtns: document.querySelectorAll('.example-btn')
+};
 
-// Initialize
-function init() {
-    setupEventListeners();
-    createParticles();
-    updateUILanguage();
-    // Register service worker for PWA
-    if ('serviceWorker' in navigator) {
-        navigator.serviceWorker.register('/static/sw.js').catch(err => {
-            console.log('Service Worker registration failed:', err);
+// ==================== INITIALIZATION ====================
+
+document.addEventListener('DOMContentLoaded', () => {
+    initializeLanguage();
+    attachEventListeners();
+    registerServiceWorker();
+});
+
+// ==================== EVENT LISTENERS ====================
+
+function attachEventListeners() {
+    elements.solveBtn.addEventListener('click', handleSolve);
+    elements.langToggle.addEventListener('click', toggleLanguage);
+    elements.copyBtn.addEventListener('click', copyResults);
+    elements.shareBtn.addEventListener('click', shareResults);
+    elements.newQueryBtn.addEventListener('click', resetQuery);
+    
+    elements.exampleBtns.forEach(btn => {
+        btn.addEventListener('click', () => {
+            const question = btn.getAttribute('data-question');
+            elements.questionInput.value = question;
+            elements.questionInput.focus();
         });
-    }
-}
-
-// Event Listeners
-function setupEventListeners() {
-    submitBtn.addEventListener('click', handleSubmit);
-    languageToggle.addEventListener('click', toggleLanguage);
-    copyBtn.addEventListener('click', copyResultToClipboard);
-    questionInput.addEventListener('keypress', (e) => {
-        if (e.key === 'Enter' && !isProcessing) {
-            handleSubmit();
+    });
+    
+    // Enter key to submit
+    elements.questionInput.addEventListener('keydown', (e) => {
+        if (e.key === 'Enter' && e.ctrlKey) {
+            handleSolve();
         }
     });
-
-    // Example buttons
-    document.querySelectorAll('.example-btn').forEach(btn => {
-        btn.addEventListener('click', (e) => {
-            const questionType = e.currentTarget.dataset.question;
-            const question = translations[currentLanguage].exampleQuestions[questionType];
-            questionInput.value = question;
-            handleSubmit();
-        });
-    });
 }
 
-// Submit Handler
-async function handleSubmit() {
-    const question = questionInput.value.trim();
+// ==================== MAIN HANDLERS ====================
 
+async function handleSolve() {
+    const question = elements.questionInput.value.trim();
+    
     if (!question) {
-        showToast('Please enter a question', 'error');
+        showToast(translate('query-required'), 'warning');
         return;
     }
-
-    if (isProcessing) return;
-
-    isProcessing = true;
-    submitBtn.classList.add('loading');
-    submitBtn.disabled = true;
-
+    
+    state.currentQuery = question;
+    state.isLoading = true;
+    
+    // Show loading state
+    elements.solveBtn.disabled = true;
+    elements.loadingContainer.style.display = 'flex';
+    elements.resultsContent.style.display = 'none';
+    elements.resultsSection.style.display = 'block';
+    
     try {
         const response = await fetch('/solve', {
             method: 'POST',
@@ -126,158 +148,144 @@ async function handleSubmit() {
             },
             body: JSON.stringify({
                 question: question,
-                language: currentLanguage
+                language: state.currentLanguage
             })
         });
-
+        
         if (!response.ok) {
-            throw new Error('Failed to process question');
+            throw new Error(`HTTP error! status: ${response.status}`);
         }
-
+        
         const data = await response.json();
-
+        
         if (data.success) {
-            displayResult(data);
-            showToast('Result processed successfully!', 'success');
+            state.currentResult = data;
+            displayResults(data);
+            showToast('✨ Quantum computation completed!', 'success');
         } else {
-            throw new Error(data.error || 'Unknown error');
+            throw new Error(data.error || 'Unknown error occurred');
         }
     } catch (error) {
         console.error('Error:', error);
-        showToast(translations[currentLanguage].error, 'error');
+        showToast(`Error: ${error.message}`, 'error');
     } finally {
-        isProcessing = false;
-        submitBtn.classList.remove('loading');
-        submitBtn.disabled = false;
+        state.isLoading = false;
+        elements.solveBtn.disabled = false;
     }
 }
 
-// Display Result
-function displayResult(data) {
-    document.getElementById('resultQuestion').textContent = data.question;
-    document.getElementById('resultAnswer').textContent = data.answer;
-    document.getElementById('resultState').textContent = data.quantum_state;
-    document.getElementById('resultProbability').textContent = (data.probability * 100).toFixed(1) + '%';
-    document.getElementById('resultNumbers').textContent = data.numbers_extracted.join(', ');
-    document.getElementById('resultAccuracy').textContent = data.accuracy + '%';
-
-    resultsSection.classList.add('show');
-    resultCard.scrollIntoView({ behavior: 'smooth', block: 'nearest' });
-}
-
-// Copy to Clipboard
-function copyResultToClipboard() {
-    const question = document.getElementById('resultQuestion').textContent;
-    const answer = document.getElementById('resultAnswer').textContent;
-    const state = document.getElementById('resultState').textContent;
-    const probability = document.getElementById('resultProbability').textContent;
-    const accuracy = document.getElementById('resultAccuracy').textContent;
-
-    const text = `Question: ${question}\nAnswer: ${answer}\nQuantum State: ${state}\nProbability: ${probability}\nAccuracy: ${accuracy}`;
-
-    navigator.clipboard.writeText(text).then(() => {
-        const originalText = copyBtn.textContent;
-        copyBtn.textContent = translations[currentLanguage].copiedText;
-        setTimeout(() => {
-            copyBtn.textContent = originalText;
-        }, 2000);
-    });
-}
-
-// Toast Notification
-function showToast(message, type = 'info') {
-    toast.textContent = message;
-    toast.classList.remove('error', 'success');
-    if (type !== 'info') {
-        toast.classList.add(type);
-    }
-    toast.classList.add('show');
-
+function displayResults(result) {
+    // Update result elements
+    document.getElementById('quantumState').textContent = result.quantum_state;
+    document.getElementById('probability').textContent = result.probability;
+    document.getElementById('accuracy').textContent = result.accuracy;
+    document.getElementById('numbersUsed').textContent = result.numbers_used.join(', ');
+    document.getElementById('explanation').textContent = result.explanation;
+    document.getElementById('timestamp').textContent = new Date(result.timestamp).toLocaleString();
+    
+    // Hide loading, show results
+    elements.loadingContainer.style.display = 'none';
+    elements.resultsContent.style.display = 'block';
+    
+    // Scroll to results
     setTimeout(() => {
-        toast.classList.remove('show');
+        elements.resultsCard.scrollIntoView({ behavior: 'smooth', block: 'nearest' });
+    }, 100);
+}
+
+function copyResults() {
+    if (!state.currentResult) return;
+    
+    const resultText = `
+Quantum Results from Quantarion AI
+================================
+Question: ${state.currentQuery}
+Quantum State: ${state.currentResult.quantum_state}
+Success Probability: ${state.currentResult.probability}
+Accuracy: ${state.currentResult.accuracy}
+Numbers Used: ${state.currentResult.numbers_used.join(', ')}
+Explanation: ${state.currentResult.explanation}
+Timestamp: ${new Date(state.currentResult.timestamp).toLocaleString()}
+    `;
+    
+    navigator.clipboard.writeText(resultText)
+        .then(() => showToast(translate('copied-success'), 'success'))
+        .catch(() => showToast(translate('copy-failed'), 'error'));
+}
+
+function shareResults() {
+    if (!state.currentResult) return;
+    
+    const shareText = `🚀 Just computed quantum results with Quantarion AI!\n\nQuestion: ${state.currentQuery}\nQuantum State: ${state.currentResult.quantum_state}\nSuccess Rate: ${state.currentResult.probability}`;
+    
+    if (navigator.share) {
+        navigator.share({
+            title: 'Quantarion AI Results',
+            text: shareText
+        }).catch(err => console.log('Share failed:', err));
+    } else {
+        // Fallback: copy to clipboard
+        navigator.clipboard.writeText(shareText)
+            .then(() => showToast('Shared to clipboard!', 'success'))
+            .catch(() => showToast('Share failed', 'error'));
+    }
+}
+
+function resetQuery() {
+    elements.questionInput.value = '';
+    elements.resultsSection.style.display = 'none';
+    elements.questionInput.focus();
+}
+
+// ==================== LANGUAGE & i18n ====================
+
+function toggleLanguage() {
+    state.currentLanguage = state.currentLanguage === 'en' ? 'hi' : 'en';
+    localStorage.setItem('language', state.currentLanguage);
+    initializeLanguage();
+}
+
+function initializeLanguage() {
+    document.body.classList.remove('lang-en', 'lang-hi');
+    document.body.classList.add(`lang-${state.currentLanguage}`);
+}
+
+function translate(key) {
+    return i18n[state.currentLanguage][key] || i18n['en'][key] || key;
+}
+
+// ==================== TOAST NOTIFICATIONS ====================
+
+function showToast(message, type = 'info') {
+    const toast = document.createElement('div');
+    toast.className = `toast ${type}`;
+    toast.textContent = message;
+    
+    elements.toastContainer.appendChild(toast);
+    
+    setTimeout(() => {
+        toast.style.animation = 'slideInUp 0.3s ease reverse';
+        setTimeout(() => toast.remove(), 300);
     }, 3000);
 }
 
-// Language Toggle
-function toggleLanguage() {
-    currentLanguage = currentLanguage === 'en' ? 'hi' : 'en';
-    updateUILanguage();
-    localStorage.setItem('preferredLanguage', currentLanguage);
-}
+// ==================== SERVICE WORKER (PWA) ====================
 
-// Update UI Language
-function updateUILanguage() {
-    const lang = translations[currentLanguage];
-
-    document.getElementById('inputLabel').textContent = lang.inputLabel;
-    document.getElementById('submitBtnText').textContent = lang.submitBtn;
-    document.getElementById('examplesLabel').textContent = lang.examplesLabel;
-    document.getElementById('exOptimization').querySelector('.text').textContent = lang.exOptimization;
-    document.getElementById('exCalculation').querySelector('.text').textContent = lang.exCalculation;
-    document.getElementById('exPattern').querySelector('.text').textContent = lang.exPattern;
-    document.getElementById('exDecision').querySelector('.text').textContent = lang.exDecision;
-    document.getElementById('resultTitle').textContent = lang.resultTitle;
-    document.getElementById('questionLabel').textContent = lang.questionLabel;
-    document.getElementById('answerLabel').textContent = lang.answerLabel;
-    document.getElementById('stateLabel').textContent = lang.stateLabel;
-    document.getElementById('probabilityLabel').textContent = lang.probabilityLabel;
-    document.getElementById('numbersLabel').textContent = lang.numbersLabel;
-    document.getElementById('accuracyLabel').textContent = lang.accuracyLabel;
-    document.getElementById('copyText').textContent = lang.copyText;
-
-    questionInput.placeholder = currentLanguage === 'en' 
-        ? 'e.g., What is 42 + 8 using quantum computing?'
-        : 'उदा. क्वांटम कंप्यूटिंग का उपयोग करके 42 + 8 क्या है?';
-}
-
-// Create Floating Particles
-function createParticles() {
-    const particleCount = window.innerWidth < 768 ? 30 : 50;
-
-    for (let i = 0; i < particleCount; i++) {
-        const particle = document.createElement('div');
-        particle.className = 'particle';
-
-        const size = Math.random() * 100 + 20;
-        const duration = Math.random() * 15 + 10;
-        const delay = Math.random() * 5;
-        const tx = (Math.random() - 0.5) * window.innerWidth;
-
-        particle.style.width = size + 'px';
-        particle.style.height = size + 'px';
-        particle.style.left = Math.random() * window.innerWidth + 'px';
-        particle.style.bottom = '-100px';
-        particle.style.animationDuration = duration + 's';
-        particle.style.animationDelay = delay + 's';
-        particle.style.setProperty('--tx', tx + 'px');
-
-        particlesContainer.appendChild(particle);
+function registerServiceWorker() {
+    if ('serviceWorker' in navigator) {
+        navigator.serviceWorker.register('/static/sw.js')
+            .then(reg => console.log('Service Worker registered'))
+            .catch(err => console.log('Service Worker registration failed:', err));
     }
 }
 
-// Load preferred language
-function loadPreferredLanguage() {
-    const saved = localStorage.getItem('preferredLanguage');
-    if (saved) {
-        currentLanguage = saved;
-        updateUILanguage();
-    }
+// ==================== UTILITY FUNCTIONS ====================
+
+function formatNumber(num) {
+    return new Intl.NumberFormat().format(num);
 }
 
-// Window resize handler
-window.addEventListener('resize', () => {
-    // Handle responsive changes
-});
-
-// Install PWA
-let deferredPrompt;
-window.addEventListener('beforeinstallprompt', (e) => {
-    e.preventDefault();
-    deferredPrompt = e;
-});
-
-// Initialize on load
-window.addEventListener('DOMContentLoaded', () => {
-    loadPreferredLanguage();
-    init();
-});
+function getRandomColor() {
+    const colors = ['#818cf8', '#a78bfa', '#c4b5fd', '#ddd6fe'];
+    return colors[Math.floor(Math.random() * colors.length)];
+}

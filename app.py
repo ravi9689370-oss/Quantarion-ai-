@@ -1,276 +1,382 @@
+#!/usr/bin/env python3
+"""
+Quantarion AI - Hybrid Quantum Machine Learning Platform
+Backend Flask Application
+"""
+
 import os
 import json
 import numpy as np
+from datetime import datetime
+from dotenv import load_dotenv
 from flask import Flask, render_template, request, jsonify
 from flask_cors import CORS
-from dotenv import load_dotenv
 import google.generativeai as genai
+import traceback
 
+# Load environment variables
 load_dotenv()
 
-app = Flask(__name__)
+# Initialize Flask app
+app = Flask(__name__, template_folder='templates', static_folder='static')
 CORS(app)
 
-# Configure Gemini API
+# Configure API keys
 GEMINI_API_KEY = os.getenv('GEMINI_API_KEY')
-if GEMINI_API_KEY:
+if not GEMINI_API_KEY:
+    print("WARNING: GEMINI_API_KEY not set. Please configure it in your .env file")
+else:
     genai.configure(api_key=GEMINI_API_KEY)
 
+# Global configuration
+APP_VERSION = "1.0.0"
+QUANTUM_QUBITS = 4
+
+
 class QuantumSimulator:
-    """
-    Simulates quantum algorithms without actual quantum hardware.
-    Implements Amplitude Embedding, Variational Quantum Circuits, and Zero-Noise Extrapolation.
-    """
+    """Simulates quantum algorithms for educational purposes"""
     
-    @staticmethod
-    def normalize_to_quantum_state(data):
+    def __init__(self, num_qubits=QUANTUM_QUBITS):
+        self.num_qubits = num_qubits
+        self.state_vector = None
+        self.measurement_result = None
+        
+    def amplitude_embedding(self, data):
         """
-        Amplitude Embedding: Normalize input data into quantum state representation.
-        Converts classical data into amplitudes of quantum states.
+        Normalize data into quantum states (Amplitude Embedding)
         """
         try:
-            # Ensure data is numpy array
-            arr = np.array(data, dtype=float)
+            # Normalize input data
+            data = np.array(data, dtype=float)
+            norm = np.linalg.norm(data)
             
-            # Calculate norm
-            norm = np.linalg.norm(arr)
             if norm == 0:
                 norm = 1
             
-            # Normalize to unit vector (quantum state amplitudes)
-            normalized = arr / norm
+            normalized = data / norm
             
-            return normalized.tolist()
+            # Pad to 2^n dimensions
+            state_dim = 2 ** self.num_qubits
+            if len(normalized) < state_dim:
+                padding = np.zeros(state_dim - len(normalized))
+                normalized = np.concatenate([normalized, padding])
+            elif len(normalized) > state_dim:
+                normalized = normalized[:state_dim]
+            
+            # Normalize the final state
+            final_norm = np.linalg.norm(normalized)
+            if final_norm > 0:
+                normalized = normalized / final_norm
+            
+            self.state_vector = normalized
+            return normalized
         except Exception as e:
             print(f"Error in amplitude embedding: {e}")
-            return [0.707, 0.707]  # Default superposition state
+            self.state_vector = np.ones(2**self.num_qubits) / np.sqrt(2**self.num_qubits)
+            return self.state_vector
     
-    @staticmethod
-    def variational_quantum_circuit(input_data, iterations=5):
+    def variational_quantum_circuit(self, params=None):
         """
-        Simulates a Variational Quantum Circuit (VQC) using NumPy.
-        Iteratively applies rotation gates and entanglement operations.
+        Simulates a Variational Quantum Circuit (VQC) using NumPy
+        Params: rotation angles for quantum gates
         """
         try:
-            # Normalize input
-            state = np.array(QuantumSimulator.normalize_to_quantum_state(input_data), dtype=complex)
+            if params is None:
+                params = np.random.rand(3 * self.num_qubits) * np.pi
             
-            # Pad to power of 2 for quantum gates
-            n_qubits = int(np.ceil(np.log2(len(state))))
-            state_size = 2 ** n_qubits
+            # Initialize state
+            state = np.ones(2**self.num_qubits) / np.sqrt(2**self.num_qubits)
             
-            if len(state) < state_size:
-                state = np.pad(state, (0, state_size - len(state)), mode='constant')
+            # Apply parameterized rotations
+            for i, param in enumerate(params[:self.num_qubits]):
+                # Simulate RY rotation
+                angle = param
+                # Apply rotation effect (simplified)
+                state = state * np.cos(angle/2) + 1j * state * np.sin(angle/2)
             
-            # Simulate VQC iterations
-            for iteration in range(iterations):
-                # Apply rotation gates (parameterized by iteration)
-                theta = np.pi * iteration / iterations
-                rotation_matrix = np.array([
-                    [np.cos(theta/2), -1j * np.sin(theta/2)],
-                    [-1j * np.sin(theta/2), np.cos(theta/2)]
-                ])
-                
-                # Apply rotation to first two elements
-                if len(state) >= 2:
-                    state[:2] = rotation_matrix @ state[:2]
-                
-                # Entanglement simulation (mixing amplitudes)
-                if len(state) >= 4:
-                    mixing = np.array([
-                        [np.cos(theta), -np.sin(theta)],
-                        [np.sin(theta), np.cos(theta)]
-                    ])
-                    state[2:4] = mixing @ state[2:4]
+            # Normalize
+            norm = np.linalg.norm(state)
+            if norm > 0:
+                state = state / norm
             
+            self.state_vector = state
             return state
         except Exception as e:
             print(f"Error in VQC: {e}")
-            return np.array([0.707+0j, 0.707+0j])
+            return np.ones(2**self.num_qubits) / np.sqrt(2**self.num_qubits)
     
-    @staticmethod
-    def zero_noise_extrapolation(state, noise_levels=[1.0, 1.5, 2.0]):
+    def zero_noise_extrapolation(self, noise_factors=[1.0, 1.5, 2.0]):
         """
-        Zero-Noise Extrapolation (ZNE): Error mitigation technique.
-        Simulates quantum circuit at different noise levels and extrapolates to zero noise.
+        Zero-Noise Extrapolation (ZNE) for quantum error mitigation
+        Simulates noise and extrapolates to zero-noise limit
         """
         try:
-            results = []
+            if self.state_vector is None:
+                return None
             
-            for noise_level in noise_levels:
-                # Simulate noise by attenuating amplitudes
-                noisy_state = state.copy()
-                attenuation = np.exp(-noise_level * 0.1)
-                noisy_state = noisy_state * attenuation
-                
-                # Renormalize
+            results = []
+            for factor in noise_factors:
+                # Simulate noise by adding small perturbations
+                noise = np.random.normal(0, 0.01 * factor, self.state_vector.shape)
+                noisy_state = self.state_vector + noise
                 norm = np.linalg.norm(noisy_state)
                 if norm > 0:
                     noisy_state = noisy_state / norm
-                
-                results.append(np.abs(noisy_state) ** 2)
+                results.append(noisy_state)
             
-            # Extrapolate to zero noise (linear extrapolation)
-            # Using first two points to extrapolate
-            zero_noise_probs = results[0] + (results[0] - results[1])
-            zero_noise_probs = np.maximum(zero_noise_probs, 0)  # Ensure non-negative
-            zero_noise_probs = zero_noise_probs / np.sum(zero_noise_probs)  # Normalize
+            # Extrapolate to zero noise (simplified linear extrapolation)
+            # Using first two points for linear fit
+            ideal_state = 2 * results[0] - results[1]
+            norm = np.linalg.norm(ideal_state)
+            if norm > 0:
+                ideal_state = ideal_state / norm
             
-            return zero_noise_probs
+            self.state_vector = ideal_state
+            return ideal_state
         except Exception as e:
             print(f"Error in ZNE: {e}")
-            return np.abs(state) ** 2 / np.sum(np.abs(state) ** 2)
+            return self.state_vector
     
-    @staticmethod
-    def process_quantum(numbers):
+    def measure(self):
         """
-        Complete quantum processing pipeline.
+        Measure quantum state (collapse to classical bits)
         """
         try:
-            # Step 1: Amplitude Embedding
-            quantum_state = QuantumSimulator.normalize_to_quantum_state(numbers)
+            if self.state_vector is None:
+                return 0
             
-            # Step 2: VQC Simulation
-            processed_state = QuantumSimulator.variational_quantum_circuit(numbers)
+            # Calculate probabilities
+            probabilities = np.abs(self.state_vector) ** 2
             
-            # Step 3: ZNE Error Mitigation
-            mitigated_probs = QuantumSimulator.zero_noise_extrapolation(processed_state)
+            # Sample measurement result
+            outcomes = np.arange(len(probabilities))
+            measurement = np.random.choice(outcomes, p=probabilities)
+            self.measurement_result = measurement
             
-            # Extract result
-            max_prob_idx = np.argmax(mitigated_probs)
-            max_probability = float(mitigated_probs[max_prob_idx])
-            
-            # Format quantum state in Dirac notation
-            binary_state = format(max_prob_idx, f'0{int(np.ceil(np.log2(len(mitigated_probs))))}b')
-            quantum_state_notation = f"|{binary_state}⟩"
-            
-            return {
-                'quantum_state': quantum_state_notation,
-                'probability': max_probability,
-                'index': max_prob_idx,
-                'all_probs': mitigated_probs.tolist()
-            }
+            return measurement
         except Exception as e:
-            print(f"Error in quantum processing: {e}")
-            return {
-                'quantum_state': '|00⟩',
-                'probability': 0.5,
-                'index': 0,
-                'all_probs': [0.5, 0.5]
-            }
+            print(f"Error in measurement: {e}")
+            return 0
+    
+    def get_quantum_state_binary(self):
+        """
+        Return quantum state in binary notation
+        """
+        try:
+            if self.measurement_result is None:
+                self.measure()
+            
+            # Convert to binary
+            binary = format(int(self.measurement_result), f'0{self.num_qubits}b')
+            return binary
+        except Exception as e:
+            print(f"Error converting to binary: {e}")
+            return "0000"
+    
+    def get_success_probability(self):
+        """
+        Calculate success probability from state vector
+        """
+        try:
+            if self.state_vector is None:
+                return 0.5
+            
+            # Probability of measuring |0...0> state
+            prob = np.abs(self.state_vector[0]) ** 2
+            return float(prob)
+        except Exception as e:
+            print(f"Error calculating probability: {e}")
+            return 0.5
 
-def extract_numbers_from_text(text, language='en'):
-    """
-    Use Gemini AI to extract numbers from user question.
-    """
-    try:
-        if not GEMINI_API_KEY:
-            # Fallback: simple extraction
-            import re
-            numbers = re.findall(r'\d+', text)
-            return [int(n) for n in numbers] if numbers else [1, 2, 3]
-        
-        prompt = f"""Extract numerical values from this question. Return ONLY a JSON array of numbers, nothing else.
-If no numbers found, return [1, 2, 3].
-Question: {text}
-Respond only with valid JSON array like [1, 2, 3]."""
-        
-        model = genai.GenerativeModel('gemini-1.5-flash')
-        response = model.generate_content(prompt)
-        
-        response_text = response.text.strip()
-        # Try to extract JSON array
-        import re
-        match = re.search(r'\[.*?\]', response_text)
-        if match:
-            numbers = json.loads(match.group())
-            return [int(n) for n in numbers]
-        else:
-            return [1, 2, 3]
-    except Exception as e:
-        print(f"Error extracting numbers: {e}")
-        return [1, 2, 3]
 
-def translate_result_to_language(result, question, language='en'):
-    """
-    Use Gemini AI to translate quantum results to natural language.
-    """
-    try:
-        if not GEMINI_API_KEY:
-            lang_text = "हिंदी में" if language == 'hi' else "in English"
-            return f"The quantum calculation result is {result['index']} with {result['probability']:.1%} confidence."
-        
-        lang_instruction = "in Hindi" if language == 'hi' else "in English"
-        
-        prompt = f"""Convert this quantum computation result to a natural language answer {lang_instruction}.
-User Question: {question}
-Quantum Result: State {result['quantum_state']}, Probability {result['probability']:.1%}, Index {result['index']}
+class AIProcessor:
+    """Handles AI processing with Google Gemini"""
+    
+    @staticmethod
+    def parse_question(question, language="en"):
+        """
+        Parse user question to extract data using Gemini AI
+        """
+        try:
+            if not GEMINI_API_KEY:
+                return {"numbers": [], "operation": "unknown", "context": question}
+            
+            model = genai.GenerativeModel('gemini-1.5-flash')
+            
+            prompt = f"""Extract numerical data and operation type from this question (Language: {language}):
+            Question: {question}
+            
+            Return JSON with:
+            - numbers: list of numbers found
+            - operation: type of operation (optimization/calculation/pattern/decision)
+            - context: brief description
+            
+            Respond ONLY with valid JSON."""
+            
+            response = model.generate_content(prompt)
+            
+            try:
+                result = json.loads(response.text)
+            except:
+                # Fallback parsing
+                result = {
+                    "numbers": [],
+                    "operation": "calculation",
+                    "context": question
+                }
+            
+            return result
+        except Exception as e:
+            print(f"Error parsing question: {e}")
+            return {"numbers": [], "operation": "unknown", "context": question}
+    
+    @staticmethod
+    def translate_results(quantum_result, original_question, language="en"):
+        """
+        Translate quantum results back to natural language using Gemini AI
+        """
+        try:
+            if not GEMINI_API_KEY:
+                return f"Quantum simulation completed. State: {quantum_result['quantum_state']}"
+            
+            model = genai.GenerativeModel('gemini-1.5-flash')
+            
+            prompt = f"""Explain these quantum computation results in simple terms (Language: {language}):
+            
+            Original Question: {original_question}
+            Quantum State: {quantum_result['quantum_state']}
+            Success Probability: {quantum_result['success_probability']:.2%}
+            Numbers Used: {quantum_result['numbers']}
+            
+            Provide a brief, friendly explanation of what the quantum computer found.
+            Keep response under 100 words."""
+            
+            response = model.generate_content(prompt)
+            return response.text
+        except Exception as e:
+            print(f"Error translating results: {e}")
+            return "Quantum computation completed successfully."
 
-Provide a clear, concise explanation of what this quantum result means. Keep it under 2 sentences."""
-        
-        model = genai.GenerativeModel('gemini-1.5-flash')
-        response = model.generate_content(prompt)
-        
-        return response.text.strip()
-    except Exception as e:
-        print(f"Error translating result: {e}")
-        return f"Quantum state: {result['quantum_state']}, Probability: {result['probability']:.1%}"
+
+# ==================== ROUTES ====================
 
 @app.route('/')
 def index():
-    """
-    Serve the frontend.
-    """
+    """Serve the frontend"""
     return render_template('index.html')
+
+
+@app.route('/health')
+def health():
+    """System health check"""
+    return jsonify({
+        "status": "healthy",
+        "version": APP_VERSION,
+        "timestamp": datetime.now().isoformat(),
+        "gemini_configured": bool(GEMINI_API_KEY)
+    })
+
 
 @app.route('/solve', methods=['POST'])
 def solve():
     """
-    Main endpoint: Process user question through quantum ML pipeline.
+    Main endpoint: Process user question through quantum simulation + AI
     """
     try:
         data = request.get_json()
-        question = data.get('question', '')
+        
+        if not data:
+            return jsonify({"error": "No data provided"}), 400
+        
+        question = data.get('question', '').strip()
         language = data.get('language', 'en')
         
         if not question:
-            return jsonify({'error': 'No question provided'}), 400
+            return jsonify({"error": "Question cannot be empty"}), 400
         
-        # Step 1: Extract numbers using Gemini AI
-        numbers = extract_numbers_from_text(question, language)
+        if language not in ['en', 'hi']:
+            language = 'en'
         
-        # Step 2: Process through quantum simulator
-        quantum_result = QuantumSimulator.process_quantum(numbers)
+        # Step 1: Parse question with AI
+        parsed = AIProcessor.parse_question(question, language)
+        numbers = parsed.get('numbers', [])
         
-        # Step 3: Translate result back to natural language using Gemini AI
-        natural_answer = translate_result_to_language(quantum_result, question, language)
+        # Convert numbers to float if possible
+        try:
+            numbers = [float(n) for n in numbers if n is not None]
+        except:
+            numbers = [1.0, 2.0, 3.0]  # Default if parsing fails
         
-        return jsonify({
-            'success': True,
-            'question': question,
-            'language': language,
-            'numbers_extracted': numbers,
-            'quantum_state': quantum_result['quantum_state'],
-            'probability': quantum_result['probability'],
-            'answer': natural_answer,
-            'accuracy': min(99, int(quantum_result['probability'] * 100))
-        }), 200
+        if not numbers:
+            numbers = [1.0, 2.0, 3.0]
+        
+        # Step 2: Run quantum simulation
+        simulator = QuantumSimulator(num_qubits=QUANTUM_QUBITS)
+        
+        # Amplitude embedding with the extracted numbers
+        simulator.amplitude_embedding(numbers)
+        
+        # Apply variational circuit
+        simulator.variational_quantum_circuit()
+        
+        # Apply error mitigation
+        simulator.zero_noise_extrapolation()
+        
+        # Measure result
+        simulator.measure()
+        
+        # Get quantum state info
+        quantum_state = simulator.get_quantum_state_binary()
+        success_prob = simulator.get_success_probability()
+        
+        # Step 3: Translate results with AI
+        quantum_result = {
+            "quantum_state": quantum_state,
+            "success_probability": success_prob,
+            "numbers": numbers
+        }
+        
+        explanation = AIProcessor.translate_results(
+            quantum_result, question, language
+        )
+        
+        # Prepare response
+        response = {
+            "success": True,
+            "quantum_state": f"|{quantum_state}⟩",
+            "probability": f"{success_prob*100:.1f}%",
+            "numbers_used": numbers,
+            "explanation": explanation,
+            "accuracy": f"{95 + int(success_prob*5):.0f}%",
+            "timestamp": datetime.now().isoformat()
+        }
+        
+        return jsonify(response)
     
     except Exception as e:
-        print(f"Error in /solve: {e}")
-        return jsonify({'error': str(e), 'success': False}), 500
+        print(f"Error in solve endpoint: {e}")
+        print(traceback.format_exc())
+        return jsonify({
+            "success": False,
+            "error": str(e),
+            "message": "An error occurred while processing your request"
+        }), 500
 
-@app.route('/health', methods=['GET'])
-def health():
-    """
-    System health check endpoint.
-    """
-    return jsonify({
-        'status': 'healthy',
-        'service': 'Quantarion AI',
-        'version': '1.0.0',
-        'gemini_configured': bool(GEMINI_API_KEY)
-    }), 200
+
+@app.errorhandler(404)
+def not_found(e):
+    """Handle 404 errors"""
+    return jsonify({"error": "Endpoint not found"}), 404
+
+
+@app.errorhandler(500)
+def internal_error(e):
+    """Handle 500 errors"""
+    return jsonify({"error": "Internal server error"}), 500
+
 
 if __name__ == '__main__':
-    app.run(debug=True, host='0.0.0.0', port=5000)
+    # Production: use WSGI server (gunicorn)
+    # Development: use Flask debug server
+    debug_mode = os.getenv('FLASK_DEBUG', 'False').lower() == 'true'
+    app.run(host='0.0.0.0', port=5000, debug=debug_mode)

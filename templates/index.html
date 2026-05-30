@@ -4,78 +4,87 @@
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <meta name="description" content="Quantarion AI - Hybrid Quantum Machine Learning Platform">
-    <meta name="theme-color" content="#1e1b4b">
-    <title>Quantarion AI - Quantum ML Platform</title>
+    <meta name="theme-color" content="#6366f1">
+    <title>Quantarion AI | Quantum Machine Learning</title>
     <link rel="manifest" href="{{ url_for('static', filename='manifest.json') }}">
-    <link rel="icon" type="image/svg+xml" href="data:image/svg+xml,<svg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 100 100'><circle cx='50' cy='50' r='45' fill='none' stroke='%236366f1' stroke-width='2'/><circle cx='50' cy='50' r='10' fill='%236366f1'/><circle cx='50' cy='20' r='5' fill='%236366f1'/><circle cx='75' cy='65' r='5' fill='%236366f1'/><circle cx='25' cy='65' r='5' fill='%236366f1'/></svg>">
+    <link rel="icon" href="data:image/svg+xml,<svg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 100 100'><text y='75' font-size='75' fill='%236366f1'>⚛</text></svg>">
     <link rel="stylesheet" href="{{ url_for('static', filename='style.css') }}">
 </head>
 <body>
-    <div class="background">
-        <div class="particles" id="particles"></div>
-        <div class="gradient-bg"></div>
+    <!-- Particle Background -->
+    <div class="particles">
+        <div class="particle"></div>
+        <div class="particle"></div>
+        <div class="particle"></div>
+        <div class="particle"></div>
+        <div class="particle"></div>
     </div>
 
+    <!-- Main Container -->
     <div class="container">
         <!-- Header -->
         <header class="header">
-            <div class="header-content">
-                <div class="logo-container">
-                    <div class="atom-logo">
-                        <div class="nucleus"></div>
-                        <div class="electron orbit-1"></div>
-                        <div class="electron orbit-2"></div>
-                        <div class="electron orbit-3"></div>
+            <div class="logo-section">
+                <div class="logo-atom">
+                    <div class="nucleus"></div>
+                    <div class="orbit orbit-1">
+                        <div class="electron"></div>
+                    </div>
+                    <div class="orbit orbit-2">
+                        <div class="electron"></div>
+                    </div>
+                    <div class="orbit orbit-3">
+                        <div class="electron"></div>
                     </div>
                 </div>
-                <div class="header-text">
-                    <h1>Quantarion AI</h1>
-                    <p>Hybrid Quantum Machine Learning Platform</p>
-                </div>
-                <button class="language-toggle" id="languageToggle" title="Toggle language">EN/हिं</button>
+                <h1>Quantarion AI</h1>
+                <p class="tagline">Quantum Machine Learning Platform</p>
             </div>
+            
+            <button class="lang-toggle" id="langToggle" aria-label="Toggle language">
+                <span class="lang-en">EN</span>
+                <span class="lang-divider">|</span>
+                <span class="lang-hi">हिं</span>
+            </button>
         </header>
 
         <!-- Main Content -->
         <main class="main-content">
             <!-- Input Section -->
             <section class="input-section">
-                <div class="input-container">
-                    <label for="questionInput" class="input-label" id="inputLabel">Ask a Quantum Question</label>
-                    <div class="input-wrapper">
-                        <input 
-                            type="text" 
-                            id="questionInput" 
-                            class="question-input" 
-                            placeholder="e.g., What is 42 + 8 using quantum computing?" 
-                            autocomplete="off"
-                        >
-                        <button class="submit-btn" id="submitBtn" title="Submit question">
-                            <span class="btn-text" id="submitBtnText">Process</span>
-                            <span class="loader" id="loader"></span>
-                        </button>
-                    </div>
+                <div class="input-card">
+                    <label for="question" class="input-label">{{ 'Ask a question' | gettext }}</label>
+                    <textarea 
+                        id="question" 
+                        class="input-textarea" 
+                        placeholder="Enter your question in English or Hindi..."
+                        rows="4"
+                    ></textarea>
+                    <button id="solveBtn" class="solve-button">
+                        <span class="button-text">Process Query</span>
+                        <span class="button-icon">⚛</span>
+                    </button>
                 </div>
 
                 <!-- Example Questions -->
                 <div class="examples-section">
-                    <p class="examples-label" id="examplesLabel">Example Questions:</p>
+                    <h3 class="examples-title">Quick Examples:</h3>
                     <div class="examples-grid">
-                        <button class="example-btn" data-question="optimization" id="exOptimization">
-                            <span class="icon">⚙️</span>
-                            <span class="text" id="exOptimizationText">Optimization</span>
+                        <button class="example-btn" data-question="Optimize the values 2, 5, 8 for maximum efficiency" data-type="optimization">
+                            <span class="example-icon">📈</span>
+                            <span class="example-text">Optimization</span>
                         </button>
-                        <button class="example-btn" data-question="calculation" id="exCalculation">
-                            <span class="icon">🧮</span>
-                            <span class="text" id="exCalculationText">Calculation</span>
+                        <button class="example-btn" data-question="Calculate quantum probability for numbers 1, 4, 9" data-type="calculation">
+                            <span class="example-icon">🧮</span>
+                            <span class="example-text">Calculation</span>
                         </button>
-                        <button class="example-btn" data-question="pattern" id="exPattern">
-                            <span class="icon">🔍</span>
-                            <span class="text" id="exPatternText">Pattern</span>
+                        <button class="example-btn" data-question="Find pattern in sequence 2, 4, 6, 8, 10" data-type="pattern">
+                            <span class="example-icon">🔍</span>
+                            <span class="example-text">Pattern</span>
                         </button>
-                        <button class="example-btn" data-question="decision" id="exDecision">
-                            <span class="icon">🎯</span>
-                            <span class="text" id="exDecisionText">Decision</span>
+                        <button class="example-btn" data-question="Should I choose option A (70% success) or B (85% success)?" data-type="decision">
+                            <span class="example-icon">⚖️</span>
+                            <span class="example-text">Decision</span>
                         </button>
                     </div>
                 </div>
@@ -83,53 +92,87 @@
 
             <!-- Results Section -->
             <section class="results-section" id="resultsSection">
-                <div class="result-card" id="resultCard">
-                    <div class="result-header">
-                        <h2 class="result-title" id="resultTitle">Quantum Computation Result</h2>
-                        <button class="copy-btn" id="copyBtn" title="Copy result to clipboard">
-                            <span class="copy-icon">📋</span>
-                            <span class="copy-text" id="copyText">Copy</span>
-                        </button>
+                <div class="results-card" id="resultsCard">
+                    <!-- Loading State -->
+                    <div class="loading-container" id="loadingContainer">
+                        <div class="quantum-loader">
+                            <div class="nucleus-loader"></div>
+                            <div class="electron-orbit">
+                                <div class="electron-loader"></div>
+                            </div>
+                        </div>
+                        <p class="loading-text">Processing quantum computation...</p>
                     </div>
 
-                    <!-- Question Display -->
-                    <div class="result-item">
-                        <label class="result-label" id="questionLabel">Your Question:</label>
-                        <p class="result-value" id="resultQuestion"></p>
-                    </div>
+                    <!-- Results Display -->
+                    <div class="results-content" id="resultsContent" style="display: none;">
+                        <div class="result-header">
+                            <h2>Quantum Results</h2>
+                            <button class="copy-btn" id="copyBtn" title="Copy results">
+                                <span class="copy-icon">📋</span>
+                            </button>
+                        </div>
 
-                    <!-- Answer Display -->
-                    <div class="result-item">
-                        <label class="result-label" id="answerLabel">Answer:</label>
-                        <p class="result-value answer-text" id="resultAnswer"></p>
-                    </div>
+                        <div class="result-stats">
+                            <div class="stat-card">
+                                <span class="stat-label">Quantum State</span>
+                                <span class="stat-value" id="quantumState">|0000⟩</span>
+                                <span class="stat-description">Binary notation</span>
+                            </div>
 
-                    <!-- Quantum Stats -->
-                    <div class="quantum-stats">
-                        <div class="stat-box">
-                            <label class="stat-label" id="stateLabel">Quantum State</label>
-                            <p class="stat-value" id="resultState">|00⟩</p>
+                            <div class="stat-card">
+                                <span class="stat-label">Success Probability</span>
+                                <span class="stat-value" id="probability">75.5%</span>
+                                <span class="stat-description">Measurement likelihood</span>
+                            </div>
+
+                            <div class="stat-card">
+                                <span class="stat-label">Accuracy</span>
+                                <span class="stat-value" id="accuracy">95%</span>
+                                <span class="stat-description">Error mitigation applied</span>
+                            </div>
                         </div>
-                        <div class="stat-box">
-                            <label class="stat-label" id="probabilityLabel">Probability</label>
-                            <p class="stat-value" id="resultProbability">0%</p>
+
+                        <div class="result-data">
+                            <div class="data-item">
+                                <label>Numbers Processed:</label>
+                                <span id="numbersUsed">1, 2, 3</span>
+                            </div>
+                            <div class="data-item">
+                                <label>Timestamp:</label>
+                                <span id="timestamp">-</span>
+                            </div>
                         </div>
-                        <div class="stat-box">
-                            <label class="stat-label" id="numbersLabel">Numbers Used</label>
-                            <p class="stat-value" id="resultNumbers">-</p>
+
+                        <div class="explanation-box">
+                            <h3>Explanation</h3>
+                            <p id="explanation">The quantum computation has been completed.</p>
                         </div>
-                        <div class="stat-box">
-                            <label class="stat-label" id="accuracyLabel">Accuracy</label>
-                            <p class="stat-value" id="resultAccuracy">0%</p>
+
+                        <div class="result-actions">
+                            <button class="action-btn" id="shareBtn">
+                                <span class="action-icon">🔗</span>
+                                Share Results
+                            </button>
+                            <button class="action-btn secondary" id="newQueryBtn">
+                                <span class="action-icon">➕</span>
+                                New Query
+                            </button>
                         </div>
                     </div>
                 </div>
             </section>
         </main>
 
-        <!-- Toast Notification -->
-        <div class="toast" id="toast"></div>
+        <!-- Footer -->
+        <footer class="footer">
+            <p>🚀 Quantarion AI v1.0 | Powered by Quantum Computing + Google Gemini AI</p>
+            <p class="footer-secondary">Educational Platform | Simulated Quantum Algorithms</p>
+        </footer>
     </div>
+
+    <!-- Toast Notifications -->
+    <div class="toast-container" id="toastContainer"></div>
 
     <!-- Scripts -->
     <script src="{{ url_for('static', filename='script.js') }}"></script>

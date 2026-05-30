@@ -1,3 +1,8 @@
+/**
+ * Service Worker for Quantarion AI
+ * Enables offline functionality and caching
+ */
+
 const CACHE_NAME = 'quantarion-ai-v1';
 const urlsToCache = [
     '/',
@@ -6,23 +11,26 @@ const urlsToCache = [
     '/static/manifest.json'
 ];
 
-self.addEventListener('install', event => {
+// Install event
+self.addEventListener('install', (event) => {
     event.waitUntil(
-        caches.open(CACHE_NAME).then(cache => {
-            return cache.addAll(urlsToCache).catch(err => {
-                console.log('Cache addAll error:', err);
-                return Promise.resolve();
-            });
-        })
+        caches.open(CACHE_NAME)
+            .then((cache) => {
+                return cache.addAll(urlsToCache);
+            })
+            .catch((err) => {
+                console.log('Cache installation failed:', err);
+            })
     );
     self.skipWaiting();
 });
 
-self.addEventListener('activate', event => {
+// Activate event
+self.addEventListener('activate', (event) => {
     event.waitUntil(
-        caches.keys().then(cacheNames => {
+        caches.keys().then((cacheNames) => {
             return Promise.all(
-                cacheNames.map(cacheName => {
+                cacheNames.map((cacheName) => {
                     if (cacheName !== CACHE_NAME) {
                         return caches.delete(cacheName);
                     }
@@ -33,42 +41,45 @@ self.addEventListener('activate', event => {
     self.clients.claim();
 });
 
-self.addEventListener('fetch', event => {
+// Fetch event
+self.addEventListener('fetch', (event) => {
     // Don't cache POST requests
-    if (event.request.method === 'POST') {
-        event.respondWith(
-            fetch(event.request).catch(err => {
-                return new Response('Offline - POST requests require network', {
-                    status: 503,
-                    statusText: 'Service Unavailable'
-                });
-            })
-        );
+    if (event.request.method !== 'GET') {
         return;
     }
 
-    // Cache first strategy for GET requests
     event.respondWith(
-        caches.match(event.request).then(response => {
-            if (response) {
-                return response;
-            }
-            return fetch(event.request).then(response => {
-                if (!response || response.status !== 200 || response.type === 'error') {
+        caches.match(event.request)
+            .then((response) => {
+                // Return cached version if available
+                if (response) {
                     return response;
                 }
-                const responseToCache = response.clone();
-                caches.open(CACHE_NAME).then(cache => {
-                    cache.put(event.request, responseToCache);
-                });
-                return response;
-            }).catch(err => {
-                console.log('Fetch error:', err);
-                return new Response('Offline', {
-                    status: 503,
-                    statusText: 'Service Unavailable'
-                });
-            });
-        })
+
+                return fetch(event.request)
+                    .then((response) => {
+                        // Don't cache non-successful responses
+                        if (!response || response.status !== 200 || response.type !== 'basic') {
+                            return response;
+                        }
+
+                        // Clone the response
+                        const responseToCache = response.clone();
+
+                        caches.open(CACHE_NAME)
+                            .then((cache) => {
+                                cache.put(event.request, responseToCache);
+                            });
+
+                        return response;
+                    })
+                    .catch(() => {
+                        // Return offline page if available
+                        return new Response(
+                            '<h1>Offline</h1><p>You are currently offline. Please check your internet connection.</p>',
+                            { headers: { 'Content-Type': 'text/html' } }
+                        );
+                    });
+            })
     );
 });
